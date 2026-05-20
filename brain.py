@@ -26,14 +26,15 @@ def create_etl(inventory):
             shipped_to_keele=('Quantity', 'sum'),
             avg_quantity=('Quantity', 'mean'),
             no_picked=('Running Total', 'size'),
+            amount=('Amount', 'sum')
         ).reset_index()
 
-        result_year['Year'] = year  # adiciona o ano no resultado
+        result_year['Year'] = year  # add year
         results.append(result_year)
 
     final_result = pd.concat(results, ignore_index=True)
 
-    print(final_result)
+
     return final_result
 
 
