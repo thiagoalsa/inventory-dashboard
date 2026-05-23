@@ -12,8 +12,8 @@ def create_etl(inventory):
     for year, df_year in inventory.groupby('Year'):
         stk_moves = df_year[
             (df_year['Type'] == 'STK-STK') &
-            (df_year['Warehouse'] == 'Production') &
-            (df_year['Quantity'] > 0)
+            (df_year['Warehouse'] == 'Production')
+            #(df_year['Quantity'] > 0)
             ]
 
         stk_moves_sorted = stk_moves.sort_values('Date')
@@ -23,17 +23,27 @@ def create_etl(inventory):
         result_year = stk_grouped.agg(
             start_stock=('Running Total', 'first'),
             end_stock=('Running Total', 'last'),
-            shipped_to_keele=('Quantity', 'sum'),
-            avg_quantity=('Quantity', 'mean'),
-            no_picked=('Running Total', 'size'),
-            amount=('Amount', 'sum')
+            shipped_to_keele=('Quantity',
+                              lambda x: x[x > 0].sum()),
+            avg_quantity=('Quantity', lambda x: x[x > 0].mean()),
+            no_picked=('Quantity', lambda x: x[x > 0].size),
+            amount_sent=('Amount', lambda x: x[x > 0].sum()),
+
+            surplus_quantity=('Quantity',
+                     lambda x: (-x[x < 0]).sum()),
+            surplus_amount=('Amount', lambda x: (-x[x < 0]).sum())
         ).reset_index()
 
         result_year['Year'] = year  # add year
         results.append(result_year)
 
-    final_result = pd.concat(results, ignore_index=True)
+        result_year['used_in_production'] = (
+                result_year['amount_sent'] - result_year['surplus_amount']
+        )
 
+    final_result = pd.concat(results, ignore_index=True)
+    cols = ['Year'] + [c for c in final_result.columns if c != 'Year']
+    final_result = final_result[cols]
 
     return final_result
 

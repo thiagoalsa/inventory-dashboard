@@ -31,8 +31,9 @@ etl = create_etl(df)
 fig = px.bar(
     etl,
     x='Year',
-    y='amount',
-    color='amount',
+    y=["amount_sent", "surplus_amount", "used_in_production"],
+    #color='amount_sent',
+    barmode="group",
     title=f'Amount Per Year ({etl["Description"][0]})'
 )
 
@@ -50,10 +51,20 @@ fig.update_traces(
 st.plotly_chart(fig, use_container_width=True)
 
 st.subheader('Inventory Analysis (ETL)')
+
 st.data_editor(etl,
-               column_config={'amount':st.column_config.NumberColumn(
-                   'amount', format='£%,.2f'
-               )},
+               column_config={'amount_sent':st.column_config.NumberColumn(
+                   'amount_sent', format='£%,.2f'
+               ),
+                   "surplus_amount": st.column_config.NumberColumn(
+                       "surplus_amount",
+                       format="£%,.2f"
+                   ),
+                   "used_in_production": st.column_config.NumberColumn(
+                       "used_in_production",
+                       format="£%,.2f"
+                   ),
+               },
                use_container_width=True)
 st.write('Number of rows (Inventory):', len(df))
 
